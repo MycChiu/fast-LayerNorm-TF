@@ -44,6 +44,7 @@ def _LayerNormFusedCustomGrad(op, grad):
     return [in_back, gamma_back, beta_back]
 
 
+# adapted from tf.contrib.layers.layer_norm
 @add_arg_scope
 def layer_norm_custom(inputs,
                       center=True,
