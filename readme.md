@@ -1,14 +1,22 @@
 Fast Tensorflow Layer Normalization GPU kernel
 ====
-(picture comparing built-in and custom)
-Layer normalization is a technique used to prevent "covariate-shift" which in terms reduces the number of batches needed to reach convergence, and in some cases improves the performance of a model.However, the current implementation of layer_norm in Tensorflow will increase the clock-tim e required per batch dramatically. This is a result of computing mean and variance seperately through multiple steps, and with the current architecture of Nvidia's GPU, reading and writing to global memory (on the GPU device) is very costly. This is unavoidable for batch normalization, since we would have to keep the running mean and variance for the test time inference. However, since layer normalization does not have this constraint, we can lump all the computations together with single read and write to the global memory, which is why this custom kernel is so much faster than the current implementation.
+![comparing built-in and custom]
+(https://github.com/MycChiu/fast-LayerNorm-TF/blob/master/images/nvvp_comparison.png)
+*Kernel profile produced in [NVIDIA Visual Profiler](https://developer.nvidia.com/nvidia-visual-profiler), with input shape of [16,1024,256].*
+
+**Layer normalization** ([Jimmy Lei Ba et al.](https://arxiv.org/abs/1607.06450))is a technique used to prevent "covariate-shift" which in terms reduces the number of batches needed to reach convergence, and in some cases improves the performance of a model.However, the current implementation of layer_norm in Tensorflow will increase the clock-time required per batch dramatically. This is a result of computing mean and variance seperately through multiple steps, with the current architecture of NVIDIA's GPU, reading and writing to global memory (on the GPU device) is quite costly. This is unavoidable for batch normalization, since we would have to keep the running mean and variance for the test time inference. However, layer normalization does not have this constraint, we can lump all the computations together with single read and write to the global memory, which is why this custom kernel is so much faster than the current implementation.
+
+Here are some benchmarks for 5 layers of fully-connected layers using different normalization methods. *Generated with `layer_norm_fused_bench_mark.py`*
+![benchmark with different nb_units](https://github.com/MycChiu/fast-LayerNorm-TF/blob/master/images/benchmark_ratio_nb_unit.png)
+Batch size fixed to 128 with different nb_units.
+![benchmark with different batch_size](https://github.com/MycChiu/fast-LayerNorm-TF/blob/master/images/benchmark_ratio_batch_size.png)
+Number of units fixed to 128 with different batch size.
 
 Instructions
 ====
 In most cases, you can just run `make` in the root directory, and the make file will produce `layer_norm_fused_op.so` in the same folder. 
 
-Notes
-----
+####Notes
 1. The `makefile` assumes your cuda library is installed in `/usr/local/cuda`, if you installed it somewhere else, you can change the part `-L /usr/local/cuda/lib64/` in the last line of the `makefile` to `-L [your cuda install path]/lib64/`
 2. By default, `nvcc` will compile the kernel for compute capability 6.1, you should change the `-arch=sm_61` at the end of line 5 in `makefile` to match the compute capability of your card.For example, GTX980's compute capability is 5.2, so the argument should be `-arch=sm_52`. You can check the compute capability of your card [here](https://developer.nvidia.com/cuda-gpus).
 

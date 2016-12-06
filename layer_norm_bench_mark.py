@@ -47,9 +47,6 @@ def custom_vanilla(inputs, scale=False, center=False):
         out = out + beta
     return out
 
-# def custom_layer_norm(inputs, scale=False, center=False):
-#     return cMod.layer_norm_custom(inputs, epsilon=1e-12)
-
 
 def benchmark(norm_fn, batch_size=128, nb_units=128):
     epo_times = np.zeros([nb_epoch])
@@ -97,11 +94,9 @@ params = [
     ["LayerNormBuiltIn", layer_norm],
     ["LayerNormCustom", layer_norm_custom]
 ]
-# for _nb_units in [32,64,128,256,512,1024]:
 
 all_dfs = []
 for _nb_units in [32, 64, 128, 256, 512, 1024]:
-    # data = []
     _data = benchmark(params[0][1], nb_units=_nb_units)
     mean = _data.mean()
     for param in params:
@@ -114,6 +109,9 @@ pan_df = pd.concat(all_dfs)
 ax = sns.pointplot(x="nb_units", y="runtime_ratio",
                    hue="Norm_fn", data=pan_df)
 plt.savefig("benchmark_ratio_nb_unit.png")
+
+
+# Codes to produce benchmark_ratio_batch_size.png
 
 # all_dfs = []
 # # for _batch_size in [256, 512]:
@@ -130,21 +128,3 @@ plt.savefig("benchmark_ratio_nb_unit.png")
 # ax = sns.pointplot(x="batch_size", y="runtime_ratio",
 #                    hue="Norm_fn", data=pan_df)
 # plt.savefig("benchmark_ratio_batch_size.png")
-# vanilla_t = benchmark(custom_vanilla)
-# batchNorm_t = benchmark(slim.batch_norm)
-# layerNorm_t = benchmark(layer_norm)
-
-# print("vanilla times in seconds:")
-# print(vanilla_t)
-# print("batch_norm times in seconds:")
-# print(batchNorm_t)
-# print("layer_norm times in seconds:")
-# print(layerNorm_t)
-# print("custom_layer_norm times in seconds:")
-# print(customLayerNorm_t)
-# print("batch_norm is %1.2fX slower" %
-#       (batchNorm_t.sum() / vanilla_t.sum()))
-# print("layer_norm is %1.2fX slower" %
-#       (layerNorm_t.sum() / vanilla_t.sum()))
-# print("custom_layer_norm is %1.2fX slower" %
-#       (customLayerNorm_t.sum() / vanilla_t.sum()))
