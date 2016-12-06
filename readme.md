@@ -1,11 +1,11 @@
-Fast Tensorflow Layer Normalization GPU kernel
+Fast TensorFlow Layer Normalization GPU kernel
 ====
 ![comparing built-in and custom]
 (https://github.com/MycChiu/fast-LayerNorm-TF/blob/master/images/nvvp_comparison.png)
 
 *Kernel profile produced in [NVIDIA Visual Profiler](https://developer.nvidia.com/nvidia-visual-profiler), with input shape of [16,1024,256].*
 
-**Layer normalization** ([Jimmy Lei Ba et al.](https://arxiv.org/abs/1607.06450)) is a technique used to prevent "covariate-shift" which in terms reduces the number of batches needed to reach convergence, and in some cases improves the performance of a model.However, the current implementation of layer_norm in Tensorflow will increase the clock-time required per batch dramatically. This is a result of computing mean and variance seperately through multiple steps, with the current architecture of NVIDIA's GPU, reading and writing to global memory (on the GPU device) is quite costly. This is unavoidable for batch normalization, since we would have to keep the running mean and variance for the test time inference. However, layer normalization does not have this constraint, we can lump all the computations together with single read and write to the global memory, which is why this custom kernel is so much faster than the current implementation.
+**Layer normalization** ([Jimmy Lei Ba et al.](https://arxiv.org/abs/1607.06450)) is a technique used to prevent "covariate-shift" which in terms reduces the number of batches needed to reach convergence, and in some cases improves the performance of a model.However, the current implementation of layer_norm in TensorFlow will increase the clock-time required per batch dramatically. This is a result of computing mean and variance seperately through multiple steps, with the current architecture of NVIDIA's GPU, reading and writing to global memory (on the GPU device) is quite costly. This is unavoidable for batch normalization, since we would have to keep the running mean and variance for the test time inference. However, layer normalization does not have this constraint, we can lump all the computations together with single read and write to the global memory, which is why this custom kernel is so much faster (about 5-10x faster, depends on the input size) than the current implementation.
 
 Here are some benchmarks for 5 layers of fully-connected layers using different normalization methods. *Generated with `layer_norm_bench_mark.py`*
 
@@ -31,8 +31,8 @@ from tensorflow.python.framework import common_shapes
 #loading the custom op library
 custom_module = tf.load_op_library('layer_norm_fused_op.so')
 
-#This line is needed so Tensorflow can infer the shape of the output.
-#This may not be required (may even raise error) if you are using newer version of Tensorflow.
+#This line is needed so TensorFlow can infer the shape of the output.
+#This may not be required (may even raise error) if you are using newer version of TensorFlow.
 tf.RegisterShape("LayerNormCustom")(common_shapes.call_cpp_shape_fn)
 
 #register gradients for auto-differentiation.
