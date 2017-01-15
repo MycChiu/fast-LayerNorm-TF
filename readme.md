@@ -6,8 +6,11 @@ Fast TensorFlow Layer Normalization GPU kernel
 *Kernel profile produced in [NVIDIA Visual Profiler](https://developer.nvidia.com/nvidia-visual-profiler), with input shape of [16,1024,256].*
 
 **EDIT:**
+
     1. This repo is in the process of [merging into Tensorflow trunk](https://github.com/tensorflow/tensorflow/pull/6205#issuecomment-272670250), there is some redundancy and inefficiency in the code that needs to be improved, so please come check out the pull request if you are knowledgeable in CUDA or C++ and have the time to help out.
+
     2. I have added compiled .so files for compute capability 5.2 and 6.1 (per @NickShahML's request). If you can run `layer_norm_fused_test.py` without trouble, then you probably don't need to run `make` to re-compile the code again.
+
 **Layer normalization** ([Jimmy Lei Ba et al.](https://arxiv.org/abs/1607.06450)) is a technique used to prevent "covariate-shift" which in terms reduces the number of batches needed to reach convergence, and in some cases improves the performance of a model.However, the current implementation of layer_norm in TensorFlow will increase the clock-time required per batch dramatically. This is a result of computing mean and variance seperately through multiple steps, with the current architecture of NVIDIA's GPU, reading and writing to global memory (on the GPU device) is quite costly. This is unavoidable for batch normalization, since we would have to keep the running mean and variance for the test time inference. However, layer normalization does not have this constraint, we can lump all the computations together with single read and write to the global memory, which is why this custom kernel is so much faster (about 5-10x faster, depends on the input size) than the current implementation.
 
 Here are some benchmarks for 5 layers of fully-connected layers using different normalization methods. *Generated with `layer_norm_bench_mark.py`*
