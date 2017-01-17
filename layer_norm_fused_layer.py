@@ -19,9 +19,9 @@ cMod = tf.load_op_library(
 
 # disabled these if using newer version of Tensorflow. (You can keep this
 # if no error raised)
-tf.RegisterShape("LayerNormCustom")(common_shapes.call_cpp_shape_fn)
-tf.RegisterShape("LayerNormBiasAddCustom")(common_shapes.call_cpp_shape_fn)
-tf.RegisterShape("LayerNormFusedCustom")(common_shapes.call_cpp_shape_fn)
+# tf.RegisterShape("LayerNormCustom")(common_shapes.call_cpp_shape_fn)
+# tf.RegisterShape("LayerNormBiasAddCustom")(common_shapes.call_cpp_shape_fn)
+# tf.RegisterShape("LayerNormFusedCustom")(common_shapes.call_cpp_shape_fn)
 
 
 @ops.RegisterGradient("LayerNormCustom")
@@ -104,7 +104,7 @@ def layer_norm_custom(inputs,
             beta = variables.model_variable('beta',
                                             shape=params_shape,
                                             dtype=dtype,
-                                            initializer=init_ops.zeros_initializer,
+                                            initializer=init_ops.zeros_initializer(),
                                             collections=beta_collections,
                                             trainable=trainable)
         if scale:
@@ -114,7 +114,7 @@ def layer_norm_custom(inputs,
                 'gamma',
                 shape=params_shape,
                 dtype=dtype,
-                initializer=init_ops.ones_initializer,
+                initializer=init_ops.ones_initializer(),
                 collections=gamma_collections,
                 trainable=trainable)
 

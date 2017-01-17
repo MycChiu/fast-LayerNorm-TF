@@ -79,8 +79,8 @@ class LayerNormCustomTest(tf.test.TestCase):
                                             scope='LN',
                                             reuse=True)
             # Initialize all variables
-            # sess.run(tf.global_variables_initializer())
-            sess.run(tf.initialize_all_variables())
+            sess.run(tf.global_variables_initializer())
+            # sess.run(tf.initialize_all_variables())
             # output_train and output_eval should be the same.
             self.assertAllClose(
                 sess.run([output_train]), sess.run([output_eval]))
@@ -100,12 +100,12 @@ class LayerNormCustomTest(tf.test.TestCase):
                 g_inputs, center=center, scale=scale,
                 scope="gold_LN")
             # Initialize all variables
-            sess.run(tf.initialize_all_variables())
-            # sess.run(tf.global_variables_initializer())
+            # sess.run(tf.initialize_all_variables())
+            sess.run(tf.global_variables_initializer())
             outputs = sess.run(output_op)
             golds = sess.run(gold_op)
 
-            tol = 1e-4
+            tol = 5e-4
             self.assertAllClose(
                 outputs.ravel(), golds.ravel(), rtol=tol, atol=tol)
 
@@ -157,8 +157,8 @@ class LayerNormCustomTest(tf.test.TestCase):
             gold_grads = tf.gradients(
                 tf.nn.relu(gold_op), [inputs] + gold_vars)
             # Initialize all variables
-            sess.run(tf.initialize_all_variables())
-            # sess.run(tf.global_variables_initializer())
+            # sess.run(tf.initialize_all_variables())
+            sess.run(tf.global_variables_initializer())
             _c_grads = sess.run(cust_grads)
             _g_grads = sess.run(gold_grads)
             # _g_grads = relu_gradients(input_values)
