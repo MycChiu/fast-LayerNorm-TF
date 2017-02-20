@@ -92,10 +92,10 @@ __device__ __inline__ T get_value(const T* index, const int bound_check,const in
 
 namespace tensorflow {
 
+  typedef Eigen::GpuDevice GPUDevice;
   namespace 
   {
 
-    typedef Eigen::GpuDevice GPUDevice;
 
     template<typename T, int mult>
     __global__ void LayerNormGPUKernel(const LayerNormFusedArgs args,
