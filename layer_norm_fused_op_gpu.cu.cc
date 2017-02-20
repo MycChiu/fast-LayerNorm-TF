@@ -95,8 +95,6 @@ namespace tensorflow {
   typedef Eigen::GpuDevice GPUDevice;
   namespace 
   {
-
-
     template<typename T, int mult>
     __global__ void LayerNormGPUKernel(const LayerNormFusedArgs args,
       const T* __restrict__ input,
