@@ -27,7 +27,6 @@ In most cases, you can just run `make` in the root directory, and the make file 
 
 ####Notes
 1. The `makefile` assumes your cuda library is installed in `/usr/local/cuda`, if you installed it somewhere else, you can change the part `-L /usr/local/cuda/lib64/` in the last line of the `makefile` to `-L [your cuda install path]/lib64/`
-2. By default, `nvcc` will compile the kernel for compute capability 6.1, you should change the `-arch=sm_61` at the end of line 5 in `makefile` to match the compute capability of your card.For example, GTX980's compute capability is 5.2, so the argument should be `-arch=sm_52`. You can check the compute capability of your card [here](https://developer.nvidia.com/cuda-gpus).
 
 after the custom library is successfully compiled,You can just copy `layer_norm_fused_op.so` to where you want to use it and load it like the following:
 ```python
