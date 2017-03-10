@@ -31,7 +31,7 @@ def custom_vanilla(inputs, scale=False, center=False):
             'gamma',
             shape=params_shape,
             dtype=dtype,
-            initializer=init_ops.ones_initializer,
+            initializer=init_ops.ones_initializer(),
             collections=gamma_collections,
             trainable=True)
         out = out * gamma
@@ -41,7 +41,7 @@ def custom_vanilla(inputs, scale=False, center=False):
         beta = variables.model_variable('beta',
                                         shape=params_shape,
                                         dtype=dtype,
-                                        initializer=init_ops.zeros_initializer,
+                                        initializer=init_ops.zeros_initializer(),
                                         collections=beta_collections,
                                         trainable=True)
         out = out + beta
@@ -64,14 +64,15 @@ def benchmark(norm_fn, batch_size=128, nb_units=128):
                           biases_initializer=None,
                           scope="fc")
         # calculate loss
-        loss = tf.nn.sparse_softmax_cross_entropy_with_logits(out, labels)
+        loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
+            logits=out, labels=labels)
         # define optimizer
         optimizer = tf.train.AdamOptimizer(1e-3)
         # create train_op
         train_op = optimizer.minimize(loss)
         # initialization op
-        # init = tf.global_variables_initializer()
-        init = tf.initialize_all_variables()
+        init = tf.global_variables_initializer()
+        # init = tf.initialize_all_variables()
 
         with tf.Session("") as sess:
             sess.run(init)
@@ -90,13 +91,14 @@ def benchmark(norm_fn, batch_size=128, nb_units=128):
 
 params = [
     ["NoNorm", custom_vanilla],
-    ["BatchNorm", slim.batch_norm],
+    # ["BatchNorm", slim.batch_norm],
     ["LayerNormBuiltIn", layer_norm],
     ["LayerNormCustom", layer_norm_custom]
 ]
 
+f, (ax1, ax2) = plt.subplots(2)
 all_dfs = []
-for _nb_units in [32, 64, 128, 256, 512, 1024]:
+for _nb_units in [32, 128, 512, 1024]:
     _data = benchmark(params[0][1], nb_units=_nb_units)
     mean = _data.mean()
     for param in params:
@@ -106,25 +108,21 @@ for _nb_units in [32, 64, 128, 256, 512, 1024]:
         df["nb_units"] = _nb_units
         all_dfs.append(df)
 pan_df = pd.concat(all_dfs)
+
 ax = sns.pointplot(x="nb_units", y="runtime_ratio",
-                   hue="Norm_fn", data=pan_df)
-plt.savefig("benchmark_ratio_nb_unit.png")
+                   hue="Norm_fn", data=pan_df, ax=ax1)
 
-
-# Codes to produce benchmark_ratio_batch_size.png
-
-# all_dfs = []
-# # for _batch_size in [256, 512]:
-# for _batch_size in [256, 512, 1024, 4096, 8192, 16384]:
-#     _data = benchmark(params[0][1], batch_size=_batch_size)
-#     mean = _data.mean()
-#     for param in params:
-#         _data = benchmark(param[1], batch_size=_batch_size)
-#         df = pd.DataFrame(_data / mean, columns=["runtime_ratio"])
-#         df["Norm_fn"] = param[0]
-#         df["batch_size"] = _batch_size
-#         all_dfs.append(df)
-# pan_df = pd.concat(all_dfs)
-# ax = sns.pointplot(x="batch_size", y="runtime_ratio",
-#                    hue="Norm_fn", data=pan_df)
-# plt.savefig("benchmark_ratio_batch_size.png")
+all_dfs = []
+for _batch_size in [256, 1024, 4196]:
+    _data = benchmark(params[0][1], batch_size=_batch_size)
+    mean = _data.mean()
+    for param in params:
+        _data = benchmark(param[1], batch_size=_batch_size)
+        df = pd.DataFrame(_data / mean, columns=["runtime_ratio"])
+        df["Norm_fn"] = param[0]
+        df["batch_size"] = _batch_size
+        all_dfs.append(df)
+pan_df = pd.concat(all_dfs)
+ax = sns.pointplot(x="batch_size", y="runtime_ratio",
+                   hue="Norm_fn", data=pan_df, ax=ax2)
+plt.savefig("benchmark_ratio.png")
